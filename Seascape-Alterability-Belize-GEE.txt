@@ -420,5 +420,3 @@ var ReefChangeTot = reef2020mask.subtract(reef1996mask);
 // });
 
 
-var polygon = ee.FeatureCollection('projects/ee-dissertationchpt2/assets/fringing_mangroves');
-Map.addLayer(polygon, {}, 'test');
