@@ -1,0 +1,424 @@
+var geometry = ee.Geometry.Polygon(
+  [[-89.00536755217361, 18.54419191489762],
+  [-89.00536755217361, 15.841926162645883],
+  [-87.24755505217361, 15.841926162645883],
+  [-87.24755505217361, 18.54419191489762]], null, false);
+
+var roi = geometry;
+var areaOfstudy = roi;
+
+// ********************* Data for analysis ************************************
+
+// MANGROVE 
+var mangrove_1996_feature = ee.FeatureCollection("projects/earthengine-legacy/assets/projects/sat-io/open-datasets/GMW/extent/gmw_v3_1996_vec");
+var mangrove_2000_feature = ee.ImageCollection('LANDSAT/MANGROVE_FORESTS').filterDate('2000-01-01', '2000-12-31').mosaic();
+var mangrove_2015_feature = ee.FeatureCollection("projects/earthengine-legacy/assets/projects/sat-io/open-datasets/GMW/extent/gmw_v3_2015_vec");
+var mangrove_2020_feature = ee.FeatureCollection("projects/earthengine-legacy/assets/projects/sat-io/open-datasets/GMW/extent/gmw_v3_2020_vec");
+
+var mangrove_1996_image = mangrove_1996_feature.reduceToImage({properties: ['PXLVAL'], reducer: ee.Reducer.first()});
+// var mangrove_2000_image = mangrove_2000_feature.reduceToImage({properties: ['PXLVAL'], reducer: ee.Reducer.first()});
+var mangrove_2015_image = mangrove_2015_feature.reduceToImage({properties: ['PXLVAL'], reducer: ee.Reducer.first()});
+var mangrove_2020_image = mangrove_2020_feature.reduceToImage({properties: ['PXLVAL'], reducer: ee.Reducer.first()});
+
+var mangrove_1996 = mangrove_1996_image.eq(1).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var mangrove_2000 = mangrove_2000_feature.eq(1).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var mangrove_2015 = mangrove_2015_image.eq(1).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var mangrove_2020 = mangrove_2020_image.eq(1).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});  // Changed gt(0) to eq(1)
+
+// Map.addLayer(mangrove_1996, {palette: '#31ED31'}, 'Mangrove Extent 1996');
+// Map.addLayer(mangrove_2000, {palette: '#10BC10'}, 'Mangrove Extent 2000');
+// Map.addLayer(mangrove_2015, {palette: '#65FC6A'}, 'Mangrove Extent 2015');
+// Map.addLayer(mangrove_2020, {palette: '#00E091'}, 'Mangrove Extent 2020');
+
+//  SEAGRASS
+var seagrass1996 = ee.Image("projects/ee-dissertationchpt2/assets/Modified_Benthicmap1996withlandmasked");
+var seagrass2000 = ee.Image("projects/ee-dissertationchpt2/assets/Modified_Benthicmap2000withlandmasked");
+var seagrass2015 = ee.Image("projects/ee-dissertationchpt2/assets/Modified_Benthicmap2015withlandmasked");
+var seagrass2020 = ee.Image("projects/ee-dissertationchpt2/assets/Modified_Benthicmap2020withlandmasked");
+
+// Apply mask to only include seagrass data (values 3 and 7)
+var seagrass1996mask = seagrass1996.eq(3).or(seagrass1996.eq(7)).unmask(0).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var seagrass2000mask = seagrass2000.eq(3).or(seagrass2000.eq(7)).unmask(0).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var seagrass2015mask = seagrass2015.eq(3).or(seagrass2015.eq(7)).unmask(0).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var seagrass2020mask = seagrass2020.eq(3).or(seagrass2020.eq(7)).unmask(0).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+
+// Map.addLayer(seagrass1996mask, {}, 'Seagrass Extent 1996'); // Single color causes whole scene to be that color
+// Map.addLayer(seagrass2000mask, {}, 'Seagrass Extent 2000');
+// Map.addLayer(seagrass2015mask, {}, 'Seagrass Extent 2015');
+// Map.addLayer(seagrass2020mask, {}, 'Seagrass Extent 2020');
+
+// REEF
+var reef1996 = ee.Image("projects/ee-dissertationchpt2/assets/Modified_Benthicmap1996withlandmasked");
+var reef2000 = ee.Image("projects/ee-dissertationchpt2/assets/Modified_Benthicmap2000withlandmasked");
+var reef2015 = ee.Image("projects/ee-dissertationchpt2/assets/Modified_Benthicmap2015withlandmasked");
+var reef2020 = ee.Image("projects/ee-dissertationchpt2/assets/Modified_Benthicmap2020withlandmasked");
+
+// Apply mask to only include reef data (value 5)
+var reef1996mask = reef1996.eq(5).unmask(0).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var reef2000mask = reef2000.eq(5).unmask(0).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var reef2015mask = reef2015.eq(5).unmask(0).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+var reef2020mask = reef2020.eq(5).unmask(0).clip(areaOfstudy).reproject({crs: 'EPSG:4326', scale: 30});
+
+// Map.addLayer(reef1996mask, {}, 'Reef Extent 1996');
+// Map.addLayer(reef2000mask, {}, 'Reef Extent 2000');
+// Map.addLayer(reef2015mask, {}, 'Reef Extent 2015');
+// Map.addLayer(reef2020mask, {}, 'Reef Extent 2020');
+
+// FINAL VARIABLE NAMES TO USE FOR ANALYSIS
+var mang1996 = mangrove_1996.unmask(0);
+var mang2000 = mangrove_2000.unmask(0);
+var mang2015 = mangrove_2015.unmask(0);
+var mang2020 = mangrove_2020.unmask(0);
+
+var MangroveChange1 = mang2000.subtract(mang1996);
+var MangroveChange2 = mang2015.subtract(mang2000);
+var MangroveChange3 = mang2020.subtract(mang2015);
+var MangroveChangeTot = mang2020.subtract(mang1996);
+
+var SeagrassChange1 = seagrass2000mask.subtract(seagrass1996mask);
+var SeagrassChange2 = seagrass2015mask.subtract(seagrass2000mask);
+var SeagrassChange3 = seagrass2020mask.subtract(seagrass2015mask);
+var SeagrassChangeTot = seagrass2020mask.subtract(seagrass1996mask);
+
+var ReefChange1 = reef2000mask.subtract(reef1996mask);
+var ReefChange2 = reef2015mask.subtract(reef2000mask);
+var ReefChange3 = reef2020mask.subtract(reef2015mask);
+var ReefChangeTot = reef2020mask.subtract(reef1996mask);
+
+//**************************** Figure 2 data code ******************************************** 
+
+// // Function to calculate ecosystem area
+// function calculateEcosystemArea(image) {
+//   return image.multiply(ee.Image.pixelArea().divide(1000000)).reduceRegion({
+//     reducer: ee.Reducer.sum(),
+//     scale: 30,
+//     maxPixels: 1e14
+//   }).values().get(0);
+// }
+
+// // Function to calculate ecosystem change
+// function calculateEcosystemChange(newImage, oldImage) {
+//   var change = newImage.subtract(oldImage);
+//   var gain = change.gt(0);
+//   var loss = change.lt(0);
+  
+//   var gainArea = calculateEcosystemArea(gain);
+//   var lossArea = calculateEcosystemArea(loss);
+  
+//   return ee.Dictionary({gain: gainArea, loss: lossArea, changeImage: change});
+// }
+
+// // Define asset paths
+// var assetPaths = {
+//   mangrove: {
+//     1996: mangrove_1996,
+//     2000: mangrove_2000,
+//     2015: mangrove_2015,
+//     2020: mangrove_2020
+//   },
+//   seagrass: {
+//     1996: seagrass1996mask,
+//     2000: seagrass2000mask,
+//     2015: seagrass2015mask,
+//     2020: seagrass2020mask
+//   },
+//   reef: {
+//     1996: reef1996mask,
+//     2000: reef2000mask,
+//     2015: reef2015mask,
+//     2020: reef2020mask
+//   }
+// };
+
+// // Unmask images
+// var years = [1996, 2000, 2015, 2020];
+// var ecosystems = ['mangrove', 'seagrass', 'reef'];
+// var images = {};
+// ecosystems.forEach(function(eco) {
+//   images[eco] = years.map(function(year) {
+//     return ee.Image(assetPaths[eco][year]).unmask(0);
+//   });
+// });
+
+// // Calculate total areas and changes for each ecosystem
+// var results = {};
+// ecosystems.forEach(function(eco) {
+//   var totalAreas = images[eco].map(calculateEcosystemArea);
+//   var changes = [
+//     calculateEcosystemChange(images[eco][1], images[eco][0]),
+//     calculateEcosystemChange(images[eco][2], images[eco][1]),
+//     calculateEcosystemChange(images[eco][3], images[eco][2])
+//   ];
+  
+//   results[eco] = ee.Dictionary({
+//     'Year': years,
+//     'Total_Area': totalAreas,
+//     'Gain': changes.map(function(c) { return c.get('gain'); }),
+//     'Loss': changes.map(function(c) { return c.get('loss'); })
+//   });
+  
+//   print(eco + ' Statistics:', results[eco]);
+// });
+
+// // Prepare results for export
+// var resultsForExport = ee.FeatureCollection(
+//   ecosystems.map(function(eco) {
+//     var ecoResults = results[eco];
+//     var totalAreas = ecoResults.get('Total_Area');
+//     var gains = ecoResults.get('Gain');
+//     var losses = ecoResults.get('Loss');
+    
+//     return ee.FeatureCollection(ee.List.sequence(0, 3).map(function(i) {
+//       return ee.Feature(null, {
+//         'Ecosystem': eco,
+//         'Year': ee.List(years).get(i),
+//         'Total_Area': ee.List(totalAreas).get(i),
+//         'Gain': ee.Algorithms.If(ee.Number(i).eq(0), 0, ee.List(gains).get(ee.Number(i).subtract(1))),
+//         'Loss': ee.Algorithms.If(ee.Number(i).eq(0), 0, ee.List(losses).get(ee.Number(i).subtract(1)))
+//       });
+//     }));
+//   })
+// ).flatten();
+
+// // Export results as CSV
+// Export.table.toDrive({
+//   collection: resultsForExport,
+//   description: 'Ecosystem_Statistics',
+//   fileFormat: 'CSV'
+// });
+
+
+//**************************** Figure 3 data code ******************************************** 
+
+// // Define the projection
+// var proj = ee.Projection('EPSG:4326');
+// // Define the scale
+// var scale = 30000; // meters
+// // Generate the grid
+// var grid = areaOfstudy.coveringGrid(proj, scale);
+// // Convert the grid to a FeatureCollection
+// var gridFeatureCollection = ee.FeatureCollection(grid.map(function(feature) {
+//   return ee.Feature(feature);
+// }));
+// // Define batch size
+// var batchSize = 10;
+
+// // Function to generate grid cell ID (returns an ee.String)
+// function generateGridCellId(index, columnsPerRow) {
+//   var row = index.divide(columnsPerRow).floor();
+//   var col = index.mod(columnsPerRow);
+  
+//   // Convert column number to letter(s)
+//   var colLetter = ee.String(function() {
+//     var quotient = col.divide(26).floor();
+//     var remainder = col.mod(26);
+//     var firstLetter = ee.Algorithms.If(quotient.gt(0), 
+//                                       ee.String(ee.List.sequence(0, 25).get(quotient.subtract(1))).cat('A'),
+//                                       '');
+//     var secondLetter = ee.String(ee.List.sequence(0, 25).get(remainder)).cat('A');
+//     return ee.String(firstLetter).cat(secondLetter);
+//   }());
+  
+//   return colLetter.cat(row.add(1).toString());
+// }
+
+// // Estimate the number of columns
+// var columnsPerRow = gridFeatureCollection.size().sqrt().ceil();
+
+// // Function to calculate ecosystem area
+// function calculateEcosystemArea(image) {
+//   return image.multiply(ee.Image.pixelArea().divide(1000000)).reduceRegion({
+//     reducer: ee.Reducer.sum(),
+//     scale: 30,
+//     maxPixels: 1e14
+//   }).values().get(0);
+// }
+
+// // Function to calculate ecosystem change
+// function calculateEcosystemChange(newImage, oldImage, gridBoxGeometry) {
+//   var change = newImage.subtract(oldImage);
+//   var gain = change.gt(0);
+//   var loss = change.lt(0);
+  
+//   var gainArea = calculateEcosystemArea(gain.clip(gridBoxGeometry));
+//   var lossArea = calculateEcosystemArea(loss.clip(gridBoxGeometry));
+  
+//   return ee.Dictionary({gain: gainArea, loss: lossArea});
+// }
+
+
+// // Function to calculate ecosystem area for a specific grid box
+// function calculateEcosystemAreaForGrid(image, gridBoxGeometry) {
+//   return image.clip(gridBoxGeometry).multiply(ee.Image.pixelArea().divide(1000000)).reduceRegion({
+//     reducer: ee.Reducer.sum(),
+//     geometry: gridBoxGeometry,
+//     scale: 30,
+//     maxPixels: 1e14
+//   }).values().get(0);
+// }
+
+
+// // Function to calculate ecosystem area for a specific grid box
+// function calculateEcosystemAreaForGrid(image, gridBoxGeometry) {
+//   return image.clip(gridBoxGeometry).multiply(ee.Image.pixelArea().divide(1000000)).reduceRegion({
+//     reducer: ee.Reducer.sum(),
+//     geometry: gridBoxGeometry,
+//     scale: 30,
+//     maxPixels: 1e14
+//   }).values().get(0);
+// }
+
+// // Function to process a batch of features
+// var processBatch = function(batch, startIndex, mangrove1996, mangrove2020, seagrass1996, seagrass2020, reef1996, reef2020) {
+//   return batch.map(function(gridBox) {
+//     var gridBoxGeometry = ee.Feature(gridBox).geometry();
+    
+//     var mangrove1996Area = calculateEcosystemAreaForGrid(mangrove1996.unmask(0), gridBoxGeometry);
+//     var mangrove2020Area = calculateEcosystemAreaForGrid(mangrove2020.unmask(0), gridBoxGeometry);
+//     var seagrass1996Area = calculateEcosystemAreaForGrid(seagrass1996.unmask(0), gridBoxGeometry);
+//     var seagrass2020Area = calculateEcosystemAreaForGrid(seagrass2020.unmask(0), gridBoxGeometry);
+//     var reef1996Area = calculateEcosystemAreaForGrid(reef1996.unmask(0), gridBoxGeometry);
+//     var reef2020Area = calculateEcosystemAreaForGrid(reef2020.unmask(0), gridBoxGeometry);
+    
+//     var mangroveChange = calculateEcosystemChange(mangrove2020.unmask(0), mangrove1996.unmask(0), gridBoxGeometry);
+//     var seagrassChange = calculateEcosystemChange(seagrass2020.unmask(0), seagrass1996.unmask(0), gridBoxGeometry);
+//     var reefChange = calculateEcosystemChange(reef2020.unmask(0), reef1996.unmask(0), gridBoxGeometry);
+    
+//     var index = ee.Number(startIndex).add(ee.Number(batch.indexOf(gridBox)));
+//     var cellId = generateGridCellId(index, columnsPerRow);
+    
+//     return ee.Feature(null, {
+//       'id': cellId,
+//       'mangrove_1996_area': ee.Number(mangrove1996Area).float(),
+//       'mangrove_2020_area': ee.Number(mangrove2020Area).float(),
+//       'mangrove_gain': ee.Number(mangroveChange.get('gain')).float(),
+//       'mangrove_loss': ee.Number(mangroveChange.get('loss')).float(),
+//       'seagrass_1996_area': ee.Number(seagrass1996Area).float(),
+//       'seagrass_2020_area': ee.Number(seagrass2020Area).float(),
+//       'seagrass_gain': ee.Number(seagrassChange.get('gain')).float(),
+//       'seagrass_loss': ee.Number(seagrassChange.get('loss')).float(),
+//       'reef_1996_area': ee.Number(reef1996Area).float(),
+//       'reef_2020_area': ee.Number(reef2020Area).float(),
+//       'reef_gain': ee.Number(reefChange.get('gain')).float(),
+//       'reef_loss': ee.Number(reefChange.get('loss')).float()
+//     }).copyProperties(ee.Feature(gridBox), ['system:index']);
+//   });
+// };
+
+// // Initialize empty feature collection for results
+// var habitatChangeStats = ee.FeatureCollection([]);
+
+// // Process the grid feature collection in batches
+// var totalSize = gridFeatureCollection.size();
+// var sequence = ee.List.sequence(0, totalSize.subtract(1), batchSize);
+
+// habitatChangeStats = ee.FeatureCollection(sequence.map(function(i) {
+//   var batch = gridFeatureCollection.toList(batchSize, ee.Number(i));
+//   return processBatch(batch, i, mangrove_1996, mangrove_2020, seagrass1996mask, seagrass2020mask, reef1996mask, reef2020mask);
+// }).flatten());
+
+// // Print the resulting feature collection with habitat changes and initial/final areas
+// print(habitatChangeStats);
+
+// // Export habitatChangeStats as a CSV file to Google Drive
+// Export.table.toDrive({
+//   collection: habitatChangeStats,
+//   description: 'Habitat_Change_Stats_1996_2020_with_Initial_and_Final_Areas',
+//   folder: 'GEE_Export',
+//   fileFormat: 'CSV'
+// });
+
+//**************************** Figure 4 data code ******************************************** 
+// Define the habitat feature collections
+// var mangroveTypes = {
+//   'fringing_mangrove': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/fringing_mangroves"),
+//   'dwarf_mangrove': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/dwarf_mangroves"),
+//   'riverine_mangrove': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/riverine_mangroves"),
+//   'overwash_mangrove': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/overwash_mangroves"),
+//   'basin_mangrove': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/basin_mangroves")
+// };
+
+// var seagrassTypes = {
+//   'meadow_seagrass': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/meadow_seagrass"),
+//   'patch_seagrass': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/patch_seagrass")
+// };
+
+// var reefTypes = {
+//   'barrier_reef': ee.FeatureCollection(projects/ee-dissertationchpt2/assets/barrier_reef"),
+//   'fringing_reef': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/fringing_reef"),
+//   'patch_reef': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/patch_reef"),
+//   'atoll_reef': ee.FeatureCollection("projects/ee-dissertationchpt2/assets/atoll_reef")
+// };
+
+// // Function to calculate ecosystem area
+// function calculateEcosystemArea(image, geometry) {
+//   return image.clip(geometry).multiply(ee.Image.pixelArea().divide(1000000)).reduceRegion({
+//     reducer: ee.Reducer.sum(),
+//     geometry: geometry,
+//     scale: 30,
+//     maxPixels: 1e14
+//   }).values().get(0);
+// }
+
+// // Function to calculate ecosystem change
+// function calculateEcosystemChange(newImage, oldImage, geometry) {
+//   var change = newImage.subtract(oldImage);
+//   var gain = change.gt(0);
+//   var loss = change.lt(0);
+  
+//   var gainArea = calculateEcosystemArea(gain, geometry);
+//   var lossArea = calculateEcosystemArea(loss, geometry);
+  
+//   return ee.Dictionary({gain: gainArea, loss: lossArea});
+// }
+
+// // Function to process a habitat type
+// function processHabitatType(habitatGeometry, habitatName, ecosystemImage1996, ecosystemImage2020) {
+//   var area1996 = calculateEcosystemArea(ecosystemImage1996.unmask(0), habitatGeometry);
+//   var area2020 = calculateEcosystemArea(ecosystemImage2020.unmask(0), habitatGeometry);
+//   var changeStats = calculateEcosystemChange(ecosystemImage2020.unmask(0), ecosystemImage1996.unmask(0), habitatGeometry);
+  
+//   return ee.Feature(null, {
+//     'habitat_type': habitatName,
+//     'area_1996': ee.Number(area1996).float(),
+//     'area_2020': ee.Number(area2020).float(),
+//     'gain': ee.Number(changeStats.get('gain')).float(),
+//     'loss': ee.Number(changeStats.get('loss')).float()
+//   });
+// }
+
+// // Process each habitat type
+// var habitatChangeStats = ee.FeatureCollection([]);
+
+// // Process mangrove types
+// for (var key in mangroveTypes) {
+//   var feature = processHabitatType(mangroveTypes[key], key, mangrove_1996, mangrove_2020);
+//   habitatChangeStats = habitatChangeStats.merge(ee.FeatureCollection([feature]));
+// }
+
+// // Process seagrass types
+// for (var key in seagrassTypes) {
+//   var feature = processHabitatType(seagrassTypes[key], key, seagrass1996mask, seagrass2020mask);
+//   habitatChangeStats = habitatChangeStats.merge(ee.FeatureCollection([feature]));
+// }
+
+// // Process reef types
+// for (var key in reefTypes) {
+//   var feature = processHabitatType(reefTypes[key], key, reef1996mask, reef2020mask);
+//   habitatChangeStats = habitatChangeStats.merge(ee.FeatureCollection([feature]));
+// }
+
+// // Print the resulting feature collection with habitat changes and initial/final areas
+// print(habitatChangeStats);
+
+// // Export habitatChangeStats as a CSV file to Google Drive
+// Export.table.toDrive({
+//   collection: habitatChangeStats,
+//   description: 'Habitat_Change_Stats_1996_2020_by_Type',
+//   folder: 'GEE_Export',
+//   fileFormat: 'CSV'
+// });
+
+
+var polygon = ee.FeatureCollection('projects/ee-dissertationchpt2/assets/fringing_mangroves');
+Map.addLayer(polygon, {}, 'test');
